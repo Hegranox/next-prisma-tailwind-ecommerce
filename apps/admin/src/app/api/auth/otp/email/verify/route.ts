@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
 
       email = email.toString().toLowerCase()
 
-      if (!process.env.JWT_SECRET_KEY) {
+      if (!process.env.NEXT_PUBLIC_JWT_SECRET_KEY) {
          console.error('JWT secret key is missing')
          return getErrorResponse(500, 'Internal Server Error')
       }

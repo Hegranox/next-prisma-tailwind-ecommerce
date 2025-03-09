@@ -3,16 +3,10 @@ import { NextResponse } from 'next/server'
 
 export async function GET(req: Request) {
   try {
-    const products = await prisma.product.findMany({
-      include: {
-        brand: true,
-        categories: true,
-      },
-    })
-
-    return NextResponse.json(products)
+    const brands = await prisma.brand.findMany()
+    return NextResponse.json(brands)
   } catch (error) {
-    console.error('[PRODUCT_GET]', error)
+    console.error('[BRAND_LIST_GET]', error)
     return new NextResponse('Internal error', { status: 500 })
   }
 }

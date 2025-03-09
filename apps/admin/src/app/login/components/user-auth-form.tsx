@@ -121,8 +121,8 @@ function TryComponents({ isLoading, setIsLoading, setFetchedOTP }) {
    async function onSubmitEmail() {
       try {
          setIsLoading(true)
-
-         if (!process.env.JWT_SECRET_KEY) {
+         
+         if (!process.env.NEXT_PUBLIC_JWT_SECRET_KEY) {
             console.error('JWT secret key is missing')
             setIsLoading(false)
             return
@@ -148,7 +148,7 @@ function TryComponents({ isLoading, setIsLoading, setFetchedOTP }) {
       try {
          setIsLoading(true)
 
-         if (!process.env.JWT_SECRET_KEY) {
+         if (!process.env.NEXT_PUBLIC_JWT_SECRET_KEY) {
             console.error('JWT secret key is missing')
             setIsLoading(false)
             return

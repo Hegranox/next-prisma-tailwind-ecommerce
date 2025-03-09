@@ -1,0 +1,10 @@
+services:
+  postgres_ecommerce_dev:
+    image: postgres:13
+    container_name: postgres_ecommerce_dev
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
