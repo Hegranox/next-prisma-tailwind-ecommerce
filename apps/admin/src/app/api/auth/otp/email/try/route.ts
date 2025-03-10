@@ -10,51 +10,62 @@ import { NextRequest, NextResponse } from 'next/server'
 import { ZodError } from 'zod'
 
 export async function POST(req: NextRequest) {
-   try {
-      const OTP = generateSerial({})
+  try {
+    const OTP = generateSerial({})
 
-      const { email } = await req.json()
-            
-      if (isEmailValid(email)) {
-         await prisma.user.upsert({
-            where: { email: email.toString().toLowerCase() },
-            update: {
-               OTP,
-            },
-            create: {
-               email: email.toString().toLowerCase(),
-               OTP,
-            },
-         })
+    const { email } = await req.json()
 
-         await sendMail({
-            name: config.name,
-            to: email,
-            subject: 'Verify your email.',
-            html: await render(Mail({ code: OTP, name: config.name })),
-         })
+    if (isEmailValid(email)) {
+      const user = await prisma.user.findFirst({
+        where: { email },
+      })
 
-         return new NextResponse(
-            JSON.stringify({
-               status: 'success',
-               email,
-            }),
-            {
-               status: 200,
-               headers: { 'Content-Type': 'application/json' },
-            }
-         )
+      console.log('🚀 ~ POST ~ user:', user)
+
+      if (!user) {
+        return getErrorResponse(400, 'User not found')
       }
 
-      if (!isEmailValid(email)) {
-         return getErrorResponse(400, 'Incorrect Email')
-      }
-   } catch (error) {
-      console.error(error)
-      if (error instanceof ZodError) {
-         return getErrorResponse(400, 'failed validations', error)
+      if (!user.isAdmin) {
+        return getErrorResponse(
+          400,
+          'You do not have the necessary access permissions'
+        )
       }
 
-      return getErrorResponse(500, error.message)
-   }
+      await prisma.user.update({
+        where: { email: email.toString().toLowerCase() },
+        data: { OTP },
+      })
+
+      await sendMail({
+        name: config.name,
+        to: email,
+        subject: 'Verify your email.',
+        html: await render(Mail({ code: OTP, name: config.name })),
+      })
+
+      return new NextResponse(
+        JSON.stringify({
+          status: 'success',
+          email,
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
+    if (!isEmailValid(email)) {
+      return getErrorResponse(400, 'Incorrect Email')
+    }
+  } catch (error) {
+    console.error(error)
+    if (error instanceof ZodError) {
+      return getErrorResponse(400, 'failed validations', error)
+    }
+
+    return getErrorResponse(500, error.message)
+  }
 }
