@@ -1,61 +1,81 @@
-'use client'
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Heading } from '@/components/ui/heading'
 import { Separator } from '@/components/ui/separator'
-import { formatter } from '@/lib/utils'
-import { useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { cookies } from 'next/headers'
 
 import ReportFilters from './components/filters'
 import OrderSummary from './components/order-summary'
 import TopSellingProducts from './components/top-selling'
-import Loading from './loading'
 
-type OrderSummary = {
-  date: string
-  total: number
+async function getOrderSummary(searchParams: string) {
+  const cookieStore = cookies()
+  const token = cookieStore.get('token')?.value
+
+  const headers = token ? { Authorization: `Bearer ${token}` } : {}
+
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_URL}/api/orders/summary?${searchParams}`,
+    { cache: 'no-store', headers }
+  )
+
+  return await response.json()
 }
 
-type TopSelling = {
-  productId: string
-  title: string
-  total: number
+async function getTopSelling(searchParams: string) {
+  const cookieStore = cookies()
+  const token = cookieStore.get('token')?.value
+
+  const headers = token ? { Authorization: `Bearer ${token}` } : {}
+
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_URL}/api/orders/top-selling?${searchParams}`,
+    { cache: 'no-store', headers }
+  )
+
+  return await response.json()
 }
 
-export default function ReportsPage() {
-  const searchParams = useSearchParams()
+async function getCategories() {
+  const cookieStore = cookies()
+  const token = cookieStore.get('token')?.value
 
-  const [isLoading, setIsLoading] = useState(false)
-  const [summary, setSummary] = useState<OrderSummary[]>([])
-  const [topSelling, setTopSelling] = useState<TopSelling[]>([])
+  const headers = token ? { Authorization: `Bearer ${token}` } : {}
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true) // Set loading to true at the start
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_URL}/api/categories`,
+    { cache: 'no-store', headers }
+  )
 
-      try {
-        const [orderSummaryResponse, topSellingResponse] = await Promise.all([
-          fetch(`/api/orders/summary?${searchParams.toString()}`),
-          fetch(`/api/orders/top-selling?${searchParams.toString()}`),
-        ])
+  return await response.json()
+}
 
-        const [orderSummaryData, topSellingData] = await Promise.all([
-          orderSummaryResponse.json(),
-          topSellingResponse.json(),
-        ])
+async function getBrands() {
+  const cookieStore = cookies()
+  const token = cookieStore.get('token')?.value
 
-        setSummary(orderSummaryData)
-        setTopSelling(topSellingData)
-      } catch (error) {
-        console.error('Error fetching data:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
+  const headers = token ? { Authorization: `Bearer ${token}` } : {}
 
-    fetchData()
-  }, [searchParams])
+  const response = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/brands`, {
+    cache: 'no-store',
+    headers,
+  })
+
+  return await response.json()
+}
+
+export default async function ReportsPage({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined }
+}) {
+  const queryString = new URLSearchParams(
+    searchParams as Record<string, string>
+  ).toString()
+
+  const orderSummaryData = await getOrderSummary(queryString)
+  const topSellingData = await getTopSelling(queryString)
+  const categoriesData = await getCategories()
+  const brandsData = await getBrands()
 
   return (
     <div className="block space-y-4 my-6">
@@ -64,21 +84,15 @@ export default function ReportsPage() {
       </div>
       <Separator />
 
-      <ReportFilters />
+      <ReportFilters categories={categoriesData} brands={brandsData} />
 
-      <div className="grid gap-4 grid-cols-2">
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Orders Report</CardTitle>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
-              <div className="flex justify-center items-center h-40">
-                <div className="loader">Loading...</div>
-              </div>
-            ) : (
-              <OrderSummary data={summary} />
-            )}
+            <OrderSummary data={orderSummaryData} />
           </CardContent>
         </Card>
 
@@ -89,13 +103,7 @@ export default function ReportsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
-              <div className="flex justify-center items-center h-40">
-                <div className="loader">Loading...</div>
-              </div>
-            ) : (
-              <TopSellingProducts data={topSelling} />
-            )}
+            <TopSellingProducts data={topSellingData} />
           </CardContent>
         </Card>
       </div>

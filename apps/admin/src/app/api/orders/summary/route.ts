@@ -80,7 +80,6 @@ export async function GET(req: Request) {
         },
       },
     })
-    console.log('🚀 ~ GET ~ orders:', JSON.stringify(orders, null, 2))
 
     const groupedByDate = orders.reduce((acc, order) => {
       const date = order.createdAt.toUTCString()
