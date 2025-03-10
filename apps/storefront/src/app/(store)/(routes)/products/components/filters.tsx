@@ -31,18 +31,10 @@ import {
   TextFieldSlot,
 } from '@/components/ui/text-field'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect, useState } from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
-
-type ProductFilterValues = {
-  text_search: string
-  price_range_min: number
-  price_range_max: number
-  categories: string[]
-  brand: string
-  order_selector: string
-}
 
 const formSchema = z
   .object({
@@ -60,29 +52,33 @@ const formSchema = z
     { message: 'Min price should be less than max price' }
   )
 
-const defaultValues: ProductFilterValues = {
-  text_search: '',
-  price_range_min: 0,
-  price_range_max: 0,
-  categories: [],
-  brand: '',
-  order_selector: 'most_expensive',
-}
-
 interface ProductFilterProps {
-  onSubmit: (values: ProductFilterValues) => void
+  categories: { id: string; title: string }[]
+  brands: { id: string; title: string }[]
 }
 
-export default function ProductFilter({ onSubmit }: ProductFilterProps) {
-  const [brands, setBrands] = useState([])
-  const [categories, setCategories] = useState([])
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([])
+export default function ProductFilter({
+  categories,
+  brands,
+}: ProductFilterProps) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
   const [selectedBrand, setSelectedBrand] = useState('')
   const [selectedOrder, setSelectedOrder] = useState('most_expensive')
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([])
 
   const form = useForm({
     resolver: zodResolver(formSchema),
-    defaultValues,
+    defaultValues: {
+      text_search: '',
+      price_range_min: 0,
+      price_range_max: 0,
+      categories: [],
+      brand: '',
+      order_selector: 'most_expensive',
+    },
   })
 
   const handleSelectCategory = (category: string) => {
@@ -93,28 +89,45 @@ export default function ProductFilter({ onSubmit }: ProductFilterProps) {
     setSelectedCategories(categories)
   }
 
-  useEffect(() => {
-    const loadBrands = async () => {
-      const res = await fetch('/api/brands/list')
-      const data = await res.json()
-      setBrands(data)
-    }
+  const handleSubmit = () => {
+    const current = new URLSearchParams(Array.from(searchParams.entries()))
 
-    const loadCategories = async () => {
-      const res = await fetch('/api/categories/list')
-      const data = await res.json()
-      setCategories(data)
-    }
+    const formValues = form.getValues()
 
-    loadBrands()
-    loadCategories()
-  }, [])
+    if (formValues.text_search)
+      current.set('text_search', formValues.text_search)
+    else current.delete('text_search')
 
-  const handleSubmit = (values: ProductFilterValues) => {
-    onSubmit({
-      ...form.getValues(),
-      categories: selectedCategories.map((c) => c),
+    if (formValues.price_range_min > 0)
+      current.set('price_range_min', formValues.price_range_min.toString())
+    else current.delete('price_range_min')
+
+    if (formValues.price_range_max > 0)
+      current.set('price_range_max', formValues.price_range_max.toString())
+    else current.delete('price_range_max')
+
+    if (selectedCategories.length)
+      current.set('categories', selectedCategories.join(','))
+    else current.delete('categories')
+
+    if (formValues.brand) current.set('brand', formValues.brand)
+    else current.delete('brand')
+
+    current.set('order_selector', formValues.order_selector ?? 'most_expensive')
+
+    const search = current.toString()
+    const query = search ? `?${search}` : ''
+
+    router.replace(`${pathname}${query}`, {
+      scroll: false,
     })
+  }
+
+  const handleClearFilters = () => {
+    form.reset()
+    setSelectedBrand('')
+    setSelectedCategories([])
+    setSelectedOrder('most_expensive')
   }
 
   return (
@@ -125,17 +138,7 @@ export default function ProductFilter({ onSubmit }: ProductFilterProps) {
             <CardTitle className="flex justify-between items-center">
               <span className="inline-flex">Filters</span>
 
-              <Button
-                variant="outline"
-                onClick={(e) => {
-                  e.preventDefault()
-                  setSelectedCategories([])
-                  form.reset()
-                  handleSubmit(defaultValues)
-                  setSelectedBrand('')
-                  setSelectedOrder('most_expensive')
-                }}
-              >
+              <Button variant="outline" onClick={handleClearFilters}>
                 Clear
               </Button>
             </CardTitle>

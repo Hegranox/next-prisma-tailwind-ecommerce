@@ -1,7 +1,7 @@
 import prisma from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 
-export async function POST(req: Request) {
+export async function GET(req: Request) {
   try {
     const userId = req.headers.get('X-USER-ID')
 
@@ -9,14 +9,17 @@ export async function POST(req: Request) {
       return new NextResponse('Unauthorized', { status: 401 })
     }
 
-    const {
-      text_search,
-      price_range_min,
-      price_range_max,
-      categories,
-      brand,
-      order_selector,
-    } = await req.json()
+    const { searchParams } = new URL(req.url)
+
+    const text_search = searchParams.get('text_search') || ''
+    const price_range_min =
+      Number.parseInt(searchParams.get('price_range_min')) || 0
+    const price_range_max =
+      Number.parseInt(searchParams.get('price_range_max')) || 0
+    const categories = searchParams.get('categories')?.split(',') || []
+    const brand = searchParams.get('brand') || null
+    const order_selector =
+      searchParams.get('order_selector') || 'most_expensive'
 
     const products = await prisma.product.findMany({
       where: {

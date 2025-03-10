@@ -63,11 +63,11 @@ async function getBrands() {
   return await response.json()
 }
 
-export default async function ReportsPage({
-  searchParams,
-}: {
+interface ReportsPageProps {
   searchParams: { [key: string]: string | string[] | undefined }
-}) {
+}
+
+export default async function ReportsPage({ searchParams }: ReportsPageProps) {
   const queryString = new URLSearchParams(
     searchParams as Record<string, string>
   ).toString()

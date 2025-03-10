@@ -11,13 +11,15 @@ import {
 import moment from 'moment'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
+interface ReportFiltersProps {
+  categories: { id: string; title: string }[]
+  brands: { id: string; title: string }[]
+}
+
 export default function ReportFilters({
   categories,
   brands,
-}: {
-  categories: { id: string; title: string }[]
-  brands: { id: string; title: string }[]
-}) {
+}: ReportFiltersProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()

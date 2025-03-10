@@ -1,31 +1,67 @@
-'use client'
-
 import { ProductGrid, ProductSkeletonGrid } from '@/components/native/Product'
 import { Heading } from '@/components/native/heading'
 import { Separator } from '@/components/native/separator'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { isVariableValid } from '@/lib/utils'
-import { ProductWithIncludes } from '@/types/prisma'
-import { useEffect, useState } from 'react'
+import { cookies } from 'next/headers'
 
 import ProductFilter from './components/filters'
 
-export default function Products() {
-  const [products, setProducts] = useState<ProductWithIncludes[]>([])
+async function getCategories() {
+  const cookieStore = cookies()
+  const token = cookieStore.get('token')?.value
 
-  const handleLoadProducts = async (values: any) => {
-    const response = await fetch('/api/products/list', {
-      method: 'POST',
-      body: JSON.stringify(values),
-    })
-    const products = await response.json()
-    setProducts(products)
-  }
+  const headers = token ? { Authorization: `Bearer ${token}` } : {}
 
-  useEffect(() => {
-    handleLoadProducts({})
-  }, [])
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_APP_URL}/api/categories/list`,
+    { cache: 'no-store', headers }
+  )
+
+  return await response.json()
+}
+
+async function getBrands() {
+  const cookieStore = cookies()
+  const token = cookieStore.get('token')?.value
+
+  const headers = token ? { Authorization: `Bearer ${token}` } : {}
+
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_APP_URL}/api/brands/list`,
+    { cache: 'no-store', headers }
+  )
+
+  return await response.json()
+}
+
+async function getProducts(searchParams: string) {
+  const cookieStore = cookies()
+  const token = cookieStore.get('token')?.value
+
+  const headers = token ? { Authorization: `Bearer ${token}` } : {}
+
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_APP_URL}/api/products/list?${searchParams}`,
+    { cache: 'no-store', headers }
+  )
+
+  return await response.json()
+}
+
+interface ProductsProps {
+  searchParams: { [key: string]: string | string[] | undefined }
+}
+
+export default async function Products({ searchParams }: ProductsProps) {
+  const queryString = new URLSearchParams(
+    searchParams as Record<string, string>
+  ).toString()
+
+  const productsData = await getProducts(queryString)
+  const categoriesData = await getCategories()
+  const brandsData = await getBrands()
 
   return (
     <>
@@ -35,10 +71,10 @@ export default function Products() {
       />
       <Separator />
 
-      {isVariableValid(products) ? (
+      {isVariableValid(productsData) ? (
         <div className="grid grid-cols-12 gap-2">
           <div className="hidden md:block md:col-span-4 xl:col-span-3">
-            <ProductFilter onSubmit={handleLoadProducts} />
+            <ProductFilter brands={brandsData} categories={categoriesData} />
           </div>
 
           <div className="md:hidden mb-4">
@@ -46,14 +82,17 @@ export default function Products() {
               <SheetTrigger asChild>
                 <Button variant="outline">Filters</Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-72 p-4">
-                <ProductFilter onSubmit={handleLoadProducts} />
+              <SheetContent side="left" className="w-96 p-4 overflow-auto">
+                <ProductFilter
+                  brands={brandsData}
+                  categories={categoriesData}
+                />
               </SheetContent>
             </Sheet>
           </div>
 
           <div className="col-span-12 md:col-span-8 xl:col-span-9">
-            <ProductGrid products={products} />
+            <ProductGrid products={productsData} />
           </div>
         </div>
       ) : (
