@@ -18,8 +18,6 @@ export async function POST(req: Request) {
       order_selector,
     } = await req.json()
 
-    console.log('🚀 ~ POST ~ text_search:', text_search)
-
     const products = await prisma.product.findMany({
       where: {
         ...(text_search
@@ -30,22 +28,43 @@ export async function POST(req: Request) {
               },
             }
           : {}),
+        ...(price_range_min ? { price: { gte: price_range_min } } : {}),
+        ...(price_range_max ? { price: { lte: price_range_max } } : {}),
+        ...(categories?.length
+          ? { categories: { some: { id: { in: categories } } } }
+          : {}),
+        ...(brand ? { brand: { id: brand } } : {}),
+      },
+      orderBy: {
+        ...(order_selector && order_selector === 'most_expensive'
+          ? { price: 'desc' }
+          : {}),
+        ...(order_selector && order_selector === 'least_expensive'
+          ? { price: 'asc' }
+          : {}),
+        ...(order_selector && order_selector === 'title_order_asc'
+          ? { title: 'asc' }
+          : {}),
+        ...(order_selector && order_selector === 'title_order_desc'
+          ? { title: 'desc' }
+          : {}),
+        ...(!order_selector ? { price: 'desc' } : {}),
       },
       include: {
         brand: true,
         categories: true,
       },
     })
-    // console.log('🚀 ~ POST ~ products:', products)
 
-    // const products = await prisma.product.findMany({
-    //   include: {
-    //     brand: true,
-    //     categories: true,
-    //   },
-    // })
+    const productsFilteringDiscount = products.filter((item) =>
+      price_range_min
+        ? item.price - item.discount >= price_range_min
+        : true && price_range_max
+          ? item.price - item.discount <= price_range_max
+          : true
+    )
 
-    return NextResponse.json(products)
+    return NextResponse.json(productsFilteringDiscount)
   } catch (error) {
     console.error('[PRODUCT_LIST_POST]', error)
     return new NextResponse('Internal error', { status: 500 })

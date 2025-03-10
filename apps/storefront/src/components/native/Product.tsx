@@ -18,7 +18,7 @@ export const ProductGrid = ({
   products: ProductWithIncludes[]
 }) => {
   return (
-    <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-3 md:grid-cols-3">
+    <div className="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-3 md:grid-cols-2 xl:grid-cols-3">
       {products.map((product) => (
         <Product product={product} key={product.id} />
       ))}
@@ -28,7 +28,7 @@ export const ProductGrid = ({
 
 export const ProductSkeletonGrid = () => {
   return (
-    <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-3 md:grid-cols-3">
+    <div className="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-3 md:grid-cols-2 xl:grid-cols-3">
       {[...Array(12)].map(() => (
         <ProductSkeleton key={Math.random()} />
       ))}
