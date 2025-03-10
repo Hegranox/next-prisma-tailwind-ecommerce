@@ -16,25 +16,8 @@ export async function POST(req: NextRequest) {
     const { email } = await req.json()
 
     if (isEmailValid(email)) {
-      const user = await prisma.user.findFirst({
+      await prisma.owner.update({
         where: { email },
-      })
-
-      console.log('🚀 ~ POST ~ user:', user)
-
-      if (!user) {
-        return getErrorResponse(400, 'User not found')
-      }
-
-      if (!user.isAdmin) {
-        return getErrorResponse(
-          400,
-          'You do not have the necessary access permissions'
-        )
-      }
-
-      await prisma.user.update({
-        where: { email: email.toString().toLowerCase() },
         data: { OTP },
       })
 

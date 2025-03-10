@@ -291,7 +291,6 @@ async function main() {
     data: {
       email: 'sesto@post.com',
       name: 'Amirhossein Mohammadi',
-      isAdmin: true,
       cart: {
         create: {},
       },

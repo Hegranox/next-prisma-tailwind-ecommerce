@@ -24,7 +24,6 @@ model User {
   isPhoneVerified   Boolean @default(false)
   isEmailSubscribed Boolean @default(false)
   isPhoneSubscribed Boolean @default(false)
-  isAdmin           Boolean @default(false)
 
   cart     Cart?
   wishlist Product[] @relation("Wishlist")
