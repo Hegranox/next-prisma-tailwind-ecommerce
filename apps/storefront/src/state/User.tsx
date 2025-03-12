@@ -3,69 +3,69 @@ import { isVariableValid, validateBoolean } from '@/lib/utils'
 import React, { createContext, useContext, useEffect, useState } from 'react'
 
 const UserContext = createContext({
-   user: null,
-   loading: true,
-   refreshUser: () => {},
+  user: null,
+  loading: true,
+  refreshUser: () => {},
 })
 
 export const useUserContext = () => {
-   return useContext(UserContext)
+  return useContext(UserContext)
 }
 
 export const UserContextProvider = ({ children }) => {
-   const { authenticated } = useAuthenticated()
+  const { authenticated } = useAuthenticated()
 
-   const [user, setUser] = useState(null)
-   const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-   const refreshUser = async () => {
-      try {
-         if (authenticated) {
-            setLoading(true)
+  const refreshUser = async () => {
+    try {
+      if (authenticated) {
+        setLoading(true)
 
-            const response = await fetch(`/api/profile`, {
-               cache: 'no-store',
-            })
+        const response = await fetch(`/api/profile`, {
+          cache: 'no-store',
+        })
 
-            const json = await response.json()
+        const json = await response.json()
 
-            if (isVariableValid(json)) {
-               setUser(json)
-               setLoading(false)
-            }
+        if (isVariableValid(json)) {
+          setUser(json)
+          setLoading(false)
+        }
 
-            setLoading(false)
-         }
-      } catch (error) {
-         console.error({ error })
+        setLoading(false)
       }
-   }
+    } catch (error) {
+      console.error({ error })
+    }
+  }
 
-   useEffect(() => {
-      try {
-         async function fetchData() {
-            const response = await fetch(`/api/profile`, {
-               cache: 'no-store',
-            })
+  useEffect(() => {
+    try {
+      async function fetchData() {
+        const response = await fetch(`/api/profile`, {
+          cache: 'no-store',
+        })
 
-            const json = await response.json()
+        const json = await response.json()
 
-            if (isVariableValid(json)) {
-               setUser(json)
-               setLoading(false)
-            }
-         }
-
-         if (authenticated) fetchData()
-         if (!authenticated) setLoading(false)
-      } catch (error) {
-         console.error({ error })
+        if (isVariableValid(json)) {
+          setUser(json)
+          setLoading(false)
+        }
       }
-   }, [authenticated])
 
-   return (
-      <UserContext.Provider value={{ user, loading, refreshUser }}>
-         {children}
-      </UserContext.Provider>
-   )
+      if (authenticated) fetchData()
+      if (!authenticated) setLoading(false)
+    } catch (error) {
+      console.error({ error })
+    }
+  }, [authenticated])
+
+  return (
+    <UserContext.Provider value={{ user, loading, refreshUser }}>
+      {children}
+    </UserContext.Provider>
+  )
 }

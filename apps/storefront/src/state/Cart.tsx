@@ -4,55 +4,55 @@ import { useUserContext } from '@/state/User'
 import React, { createContext, useContext, useEffect, useState } from 'react'
 
 const CartContext = createContext({
-   cart: null,
-   loading: true,
-   refreshCart: () => {},
-   dispatchCart: (object) => {},
+  cart: null,
+  crossSellProducts: [],
+  loading: true,
+  refreshCrossSellProducts: () => {},
+  dispatchCart: (object) => {},
 })
 
 export const useCartContext = () => {
-   return useContext(CartContext)
+  return useContext(CartContext)
 }
 
 export const CartContextProvider = ({ children }) => {
-   const { refreshUser, user } = useUserContext()
+  const [cart, setCart] = useState(null)
+  const [crossSellProducts, setCrossSellProducts] = useState([])
+  const [loading, setLoading] = useState(false)
 
-   const [cart, setCart] = useState(null)
-   const [loading, setLoading] = useState(true)
+  const dispatchCart = async (cart) => {
+    setCart(cart)
+    writeLocalCart(cart)
+  }
 
-   const dispatchCart = async (cart) => {
-      setCart(cart)
-      writeLocalCart(cart)
-   }
+  const fetchCart = async () => {
+    const response = await fetch('/api/cart')
+    const cart = await response.json()
+    setCart(cart)
+  }
 
-   const refreshCart = async () => {
-      setLoading(true)
+  const refreshCrossSellProducts = async () => {
+    const response = await fetch('/api/cart/cross-sell')
+    const crossSellProducts = await response.json()
+    setCrossSellProducts(crossSellProducts)
+  }
 
-      if (isVariableValid(user)) {
-         setCart(user?.cart)
-         writeLocalCart(user?.cart)
-      }
-      if (!isVariableValid(user)) setCart(getLocalCart())
+  useEffect(() => {
+    fetchCart()
+    refreshCrossSellProducts()
+  }, [])
 
-      setLoading(false)
-   }
-
-   useEffect(() => {
-      if (isVariableValid(user)) {
-         setCart(user?.cart)
-         writeLocalCart(user?.cart)
-      }
-      if (!isVariableValid(getLocalCart())) writeLocalCart({ items: [] })
-      if (!isVariableValid(user)) setCart(getLocalCart())
-
-      setLoading(false)
-   }, [user])
-
-   return (
-      <CartContext.Provider
-         value={{ cart, loading, refreshCart, dispatchCart }}
-      >
-         {children}
-      </CartContext.Provider>
-   )
+  return (
+    <CartContext.Provider
+      value={{
+        cart,
+        crossSellProducts,
+        loading,
+        refreshCrossSellProducts,
+        dispatchCart,
+      }}
+    >
+      {children}
+    </CartContext.Provider>
+  )
 }

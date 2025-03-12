@@ -160,7 +160,7 @@ export default function ProductFilter({
                 )}
               />
 
-              <div className="border border-gray-200 rounded-md py-2 px-2 ">
+              <div className="border border-input rounded-md py-2 px-2 ">
                 {/* Slider Price Range Filter */}
                 <FormLabel className="text-lg">Price Range</FormLabel>
                 <div className="grid grid-cols-2 gap-3">
@@ -212,7 +212,7 @@ export default function ProductFilter({
               </div>
 
               {/* Categories */}
-              <div className="border border-gray-200 rounded-md py-2 px-2 flex flex-col gap-4">
+              <div className="border border-input rounded-md py-2 px-2 flex flex-col gap-4">
                 <FormLabel className="text-lg">Categories</FormLabel>
                 <div className="flex flex-col space-y-2 max-h-72 overflow-y-auto">
                   {categories.map((category) => (

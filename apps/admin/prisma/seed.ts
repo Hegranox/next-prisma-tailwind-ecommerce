@@ -272,6 +272,41 @@ async function main() {
   }
 
   try {
+    for (const product of createdProducts) {
+      const crossSellProducts = await prisma.product.findMany({
+        where: {
+          NOT: {
+            id: product.id,
+          },
+        },
+      })
+
+      const first =
+        crossSellProducts[getRandomIntInRange(0, crossSellProducts.length - 1)][
+          'id'
+        ]
+
+      const second = crossSellProducts.filter((p) => p.id !== first)[
+        getRandomIntInRange(0, crossSellProducts.length - 1)
+      ]['id']
+
+      await prisma.product.update({
+        where: {
+          id: product.id,
+        },
+        data: {
+          crossSellProducts: {
+            connect: [{ id: first }, { id: second }],
+          },
+        },
+      })
+    }
+    console.log('Created CrossSell Products...')
+  } catch (error) {
+    console.error('Could not create crosssell products...')
+  }
+
+  try {
     await prisma.author.create({
       data: {
         name: 'Amirhossein Mohammadi',

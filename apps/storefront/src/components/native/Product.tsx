@@ -57,7 +57,7 @@ export const Product = ({ product }: { product: ProductWithIncludes }) => {
 
   return (
     <Link className="" href={`/products/${product.id}`}>
-      <Card className="h-full">
+      <Card className="h-full rounded-lg">
         <CardHeader className="p-0">
           <div className="relative h-60 w-full">
             <Image
