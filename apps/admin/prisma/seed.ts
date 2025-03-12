@@ -281,14 +281,23 @@ async function main() {
         },
       })
 
-      const first =
-        crossSellProducts[getRandomIntInRange(0, crossSellProducts.length - 1)][
-          'id'
-        ]
+      const selectedIds = []
+      const count = getRandomIntInRange(0, 3)
 
-      const second = crossSellProducts.filter((p) => p.id !== first)[
-        getRandomIntInRange(0, crossSellProducts.length - 1)
-      ]['id']
+      for (let i = 0; i < count; i++) {
+        const remainingProducts = crossSellProducts.filter(
+          (p) => !selectedIds.includes(p.id)
+        )
+
+        if (remainingProducts.length === 0) break
+
+        const randomProduct =
+          remainingProducts[
+            getRandomIntInRange(0, remainingProducts.length - 1)
+          ]
+
+        selectedIds.push(randomProduct.id)
+      }
 
       await prisma.product.update({
         where: {
@@ -296,7 +305,7 @@ async function main() {
         },
         data: {
           crossSellProducts: {
-            connect: [{ id: first }, { id: second }],
+            connect: selectedIds.map((id) => ({ id })),
           },
         },
       })
